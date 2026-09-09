@@ -239,7 +239,7 @@ def lepton_selection(events, lepton_flavour, params):
         good_leptons = passes_eta & passes_pt & passes_iso & passes_id
     else:
         raise ValueError(f"Lepton flavour {lepton_flavour} not supported for selection")
-    return leptons[good_leptons]
+    return leptons[good_leptons], good_leptons
 
 
 def lepton_selection_promptMVA(events, lepton_flavour, params, year, 
