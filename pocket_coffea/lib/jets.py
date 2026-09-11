@@ -11,7 +11,6 @@ from ..utils.utils import get_nano_version, replace_at_indices
 
 
 def get_rho(events, nano_version):
-    print(f"NANO VERSION = {nano_version}")
     if nano_version >= 12:
         return events.Rho.fixedGridRhoFastjetAll
     else:
@@ -228,100 +227,145 @@ def compute_jetId(events, jet_type, params, year):
             raise ValueError(f"Jet type {jet_type} not recognized for JetID")
 
     # nanoAOD = v15 and Run2 (2016)
-    # elif nano_version >= 15 and year[:4] == '2016':
+    elif nano_version >= 15 and (year == '2016_PreVFP' or year == '2016_PostVFP'):
 
-    #     print(f"Correct spot to enter for 2016 for {year}")
+         ### Following this code: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID13TeVUL?extralog=-%20caching%20topic#NanoAODv15
 
-    #     counts = ak.num(jets)
-    #     jets = ak.flatten(jets, axis=1)
+         counts = ak.num(jets)
+         jets = ak.flatten(jets, axis=1)
 
-    #     eval_dict = {
-    #         "eta": jets.eta,
-    #         "chHEF": jets.chHEF,
-    #         "neHEF": jets.neHEF,
-    #         "chEmEF": jets.chEmEF,
-    #         "neEmEF": jets.neEmEF,
-    #         "muEF": jets.muEF,
-    #         "chMultiplicity": jets.chMultiplicity,
-    #         "neMultiplicity": jets.neMultiplicity,
-    #         "multiplicity": jets.chMultiplicity + jets.neMultiplicity
-    #     }
+         eval_dict = {
+             "eta": jets.eta,
+             "chHEF": jets.chHEF,
+             "neHEF": jets.neHEF,
+             "chEmEF": jets.chEmEF,
+             "neEmEF": jets.neEmEF,
+             "muEF": jets.muEF,
+             "chMultiplicity": jets.chMultiplicity,
+             "neMultiplicity": jets.neMultiplicity,
+             "multiplicity": jets.chMultiplicity + jets.neMultiplicity
+         }
 
-    #     idTight = False
-    #     if (abs(jets.eta) <= 2.4):
-    #       idTight = (jets.neHEF < 0.9) and (jets.neEmEF < 0.9) and (jets.chMultiplicity+jets.neMultiplicity > 1) and (jets.chHEF > 0.0) and (jets.chMultiplicity > 0)
-    #     elif (abs(jets.eta) > 2.4 and abs(jets.eta) <= 2.7):
-    #       idTight = (jets.neHEF < 0.98) and (jets.neEmEF < 0.99)
-    #     elif (abs(jets.eta) > 2.7 and abs(jets.eta) <= 3.0):
-    #       idTight = jets.neMultiplicity >= 1
-    #     elif (abs(jets.eta) > 3.0):
-    #       idTight = (jets.neMultiplicity > 2) and (jets.neEmEF < 0.9)
+         idTight_region_1 = (
+                            (abs(jets.eta) <= 2.4)
+                            & (jets.neHEF < 0.9)
+                            & (jets.neEmEF < 0.9)
+                            & (jets.chMultiplicity+jets.neMultiplicity > 1)
+                            & (jets.chHEF > 0.0)
+                            & (jets.chMultiplicity > 0)
+                            )
+
+         idTight_region_2 = (
+                            ((abs(jets.eta) > 2.4) & (abs(jets.eta) <= 2.7))
+                            & (jets.neHEF < 0.98)
+                            & (jets.neEmEF < 0.99)
+                            )
+
+         idTight_region_3 = (
+                            ((abs(jets.eta) > 2.7 & (abs(jets.eta) <= 3.0))
+                            & (jets.neMultiplicity >= 1)
+                            )
+
+         idTight_region_4 = (
+                            (abs(jets.eta) > 3.0)
+                            & (jets.neMultiplicity > 2)
+                            & (jets.neEmEF < 0.9)
+                            )
+
+         idTight = idTight_region_1 | idTight_region_2 | idTight_region_3 | idTight_region_4
+
+         idTightLepVeto_region_1 = (
+                                    (abs(jets.eta) <= 2.4)
+                                    & (idTight)
+                                    & (jets.muEF < 0.8)
+                                    & (jets.chEmEF < 0.8)
+                                    )
         
-    #     idTightLepVeto = False
-    #     if (abs(jets.eta) <= 2.4):
-    #         idTightLepVeto = idTight and (jets.muEF < 0.8) and (jets.chEmEF < 0.8)
-    #     else:
-    #         idTightLepVeto = idTight
+         idTightLepVeto_region_2 = (
+                                    (abs(jets.eta) > 2.4)
+                                    & (idTight)
+                                    )
 
-    #     inputsTight = [eval_dict[input.name] for input in idTight.inputs]
-    #     idTight_value = idTight.evaluate(*inputsTight) * 2  # equivalent to bit2
+         idTightLepVeto = idTightLepVeto_region_1 | idTightLepVeto_region_2
 
-    #     inputsTightLepVeto = [eval_dict[input.name] for input in idTightLepVeto.inputs]
-    #     idTightLepVeto_value = idTightLepVeto.evaluate(*inputsTightLepVeto) * 4  # equivalent to bit3
+         idTight_value = idTight * 2          # bit2
+         idTightLepVeto_value = idTightLepVeto * 4   # bit3
 
-    #     # Default jet ID
-    #     id_value = idTight_value + idTightLepVeto_value
+         id_value = idTight_value + idTightLepVeto_value
 
-    #     return ak.unflatten(id_value, counts)
+         return ak.unflatten(id_value, counts)
 
 
 
     # nanoAOD = v15 and Run2 (2016)
-    # elif nano_version >= 15 and (year[:4] == '2017' or year[:4] == '2018'):
+    elif nano_version >= 15 and (year == '2017' or year == '2018'):
 
-    #     print(f"Correct spot to enter for 2017/2018 for {year}")
+         ### Following this code: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID13TeVUL?extralog=-%20caching%20topic#NanoAODv15
 
-    #     counts = ak.num(jets)
-    #     jets = ak.flatten(jets, axis=1)
+         counts = ak.num(jets)
+         jets = ak.flatten(jets, axis=1)
 
-    #     eval_dict = {
-    #         "eta": jets.eta,
-    #         "chHEF": jets.chHEF,
-    #         "neHEF": jets.neHEF,
-    #         "chEmEF": jets.chEmEF,
-    #         "neEmEF": jets.neEmEF,
-    #         "muEF": jets.muEF,
-    #         "chMultiplicity": jets.chMultiplicity,
-    #         "neMultiplicity": jets.neMultiplicity,
-    #         "multiplicity": jets.chMultiplicity + jets.neMultiplicity
-    #     }
-
-    #     idTight = False
-    #     if (abs(jets.eta) <= 2.6):
-    #       idTight = (jets.neHEF < 0.9) and (jets.neEmEF < 0.9) and (jets.chMultiplicity+jets.neMultiplicity > 1) and (jets.chHEF > 0.0) and (jets.chMultiplicity > 0)
-    #     elif (abs(jets.eta) > 2.6 and abs(jets.eta) <= 2.7):
-    #       idTight = (jets.neHEF < 0.90) and (jets.neEmEF < 0.99)
-    #     elif (abs(jets.eta) > 2.7 and abs(jets.eta) <= 3.0):
-    #       idTight = jets.neHEF < 0.9999
-    #     elif (abs(jets.eta) > 3.0):
-    #       idTight = (jets.neMultiplicity > 2) and (jets.neEmEF < 0.9)
+         eval_dict = {
+             "eta": jets.eta,
+             "chHEF": jets.chHEF,
+             "neHEF": jets.neHEF,
+             "chEmEF": jets.chEmEF,
+             "neEmEF": jets.neEmEF,
+             "muEF": jets.muEF,
+             "chMultiplicity": jets.chMultiplicity,
+             "neMultiplicity": jets.neMultiplicity,
+             "multiplicity": jets.chMultiplicity + jets.neMultiplicity
+         }
         
-    #     idTightLepVeto = False
-    #     if (abs(jets.eta) <= 2.7):
-    #         idTightLepVeto = idTight and (jets.muEF < 0.8) and (jets.chEmEF < 0.8)
-    #     else:
-    #         idTightLepVeto = idTight
+        
+         idTight_region_1 = (
+                            (abs(jets.eta) <= 2.6)
+                            & (jets.neHEF < 0.9)
+                            & (jets.neEmEF < 0.9)
+                            & (jets.chMultiplicity+jets.neMultiplicity > 1)
+                            & (jets.chHEF > 0.0)
+                            & (jets.chMultiplicity > 0)
+                            )
 
-    #     inputsTight = [eval_dict[input.name] for input in idTight.inputs]
-    #     idTight_value = idTight.evaluate(*inputsTight) * 2  # equivalent to bit2
+         idTight_region_2 = (
+                            ((abs(jets.eta) > 2.6) & (abs(jets.eta) <= 2.7))
+                            & (jets.neHEF < 0.90)
+                            & (jets.neEmEF < 0.99)
+                            )
 
-    #     inputsTightLepVeto = [eval_dict[input.name] for input in idTightLepVeto.inputs]
-    #     idTightLepVeto_value = idTightLepVeto.evaluate(*inputsTightLepVeto) * 4  # equivalent to bit3
+         idTight_region_3 = (
+                            ((abs(jets.eta) > 2.7 & (abs(jets.eta) <= 3.0))
+                            & (jets.neHEF < 0.9999)
+                            )
 
-    #     # Default jet ID
-    #     id_value = idTight_value + idTightLepVeto_value
+         idTight_region_4 = (
+                            (abs(jets.eta) > 3.0)
+                            & (jets.neMultiplicity > 2)
+                            & (jets.neEmEF < 0.9)
+                            )
 
-    #     return ak.unflatten(id_value, counts)
+         idTight = idTight_region_1 | idTight_region_2 | idTight_region_3 | idTight_region_4
+
+         idTightLepVeto_region_1 = (
+                                    (abs(jets.eta) <= 2.7)
+                                    & (idTight)
+                                    & (jets.muEF < 0.8)
+                                    & (jets.chEmEF < 0.8)
+                                    )
+        
+         idTightLepVeto_region_2 = (
+                                    (abs(jets.eta) > 2.7)
+                                    & (idTight)
+                                    )
+
+         idTightLepVeto = idTightLepVeto_region_1 | idTightLepVeto_region_2
+
+         idTight_value = idTight * 2          # bit2
+         idTightLepVeto_value = idTightLepVeto * 4   # bit3
+
+         id_value = idTight_value + idTightLepVeto_value
+
+         return ak.unflatten(id_value, counts)
         
 
     # nanoAOD = v15 and Run3
