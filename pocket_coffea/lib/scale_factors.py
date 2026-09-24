@@ -176,11 +176,10 @@ def sf_ele_trigger(params, events, year):
     # get sf, sfup, sfdown per electron
     scale_factors = [
         ak.unflatten(
-            #corr_eval(year_pog, variation, trigger_path, ele_eta_flat, ele_pt_flat),
-            corr_eval(variation, ele_eta_flat, ele_pt_flat),
+            corr_eval(year_pog, variation, trigger_path, ele_eta_flat, ele_pt_flat),
             ele_counts,
         )
-        for variation in ("nominal", "JES_TotalUp", "JES_TotalDown")
+        for variation in ("sf", "sfup", "sfdown")
     ]
 
     # return a per-event scale factor by multiplying all electron scale factors
