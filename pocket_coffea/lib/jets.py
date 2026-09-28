@@ -262,7 +262,7 @@ def compute_jetId(events, jet_type, params, year):
                             )
 
          idTight_region_3 = (
-                            ((abs(jets.eta) > 2.7 & (abs(jets.eta) <= 3.0))
+                            ((abs(jets.eta) > 2.7) & (abs(jets.eta) <= 3.0))
                             & (jets.neMultiplicity >= 1)
                             )
 
@@ -334,7 +334,7 @@ def compute_jetId(events, jet_type, params, year):
                             )
 
          idTight_region_3 = (
-                            ((abs(jets.eta) > 2.7 & (abs(jets.eta) <= 3.0))
+                            ((abs(jets.eta) > 2.7) & (abs(jets.eta) <= 3.0))
                             & (jets.neHEF < 0.9999)
                             )
 
